@@ -1,0 +1,12 @@
+services:
+  microservices-rabbit:
+    build:
+      context: image
+      dockerfile: Dockerfile
+    container_name: microservices-rabbit
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./volume/rabbit:/var/lib/rabbitmq
