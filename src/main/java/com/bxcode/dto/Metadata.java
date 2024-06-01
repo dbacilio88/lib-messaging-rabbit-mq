@@ -1,15 +1,14 @@
 package com.bxcode.dto;
 
 import lombok.*;
-import org.springframework.amqp.core.MessageProperties;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.util.Queue;
 
 /**
- * Step
+ * Metadata
  * <p>
- * Step class.
+ * Metadata class.
  * <p>
  * THIS COMPONENT WAS BUILT ACCORDING TO THE DEVELOPMENT STANDARDS
  * AND THE BXCODE APPLICATION DEVELOPMENT PROCEDURE AND IS PROTECTED
@@ -25,10 +24,9 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Step implements Serializable {
+public class Metadata implements Serializable {
 
-    private static final long serialVersionUID = 5764955199526609511L;
-    private RoutingKey routingKey;
-    private MessageProperties messageProperties;
-    private Map<String, String> mapper;
+    private static final long serialVersionUID = 2519554863153450570L;
+
+    private Queue<Step> steps;
 }

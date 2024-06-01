@@ -7,9 +7,9 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
- * Step
+ * Event
  * <p>
- * Step class.
+ * Event class.
  * <p>
  * THIS COMPONENT WAS BUILT ACCORDING TO THE DEVELOPMENT STANDARDS
  * AND THE BXCODE APPLICATION DEVELOPMENT PROCEDURE AND IS PROTECTED
@@ -25,10 +25,16 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Step implements Serializable {
+public class Event<T> implements Serializable {
 
-    private static final long serialVersionUID = 5764955199526609511L;
+
+    private static final long serialVersionUID = -2029162351448979460L;
     private RoutingKey routingKey;
-    private MessageProperties messageProperties;
-    private Map<String, String> mapper;
+    private MessageProperties properties;
+    private Metadata metadata;
+    private int code;
+    private String message;
+    private transient Map<String, ?> headers;
+    private transient T data;
+    private Trailer trailer;
 }
