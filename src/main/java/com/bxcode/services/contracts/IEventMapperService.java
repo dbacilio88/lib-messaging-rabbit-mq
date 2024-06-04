@@ -20,10 +20,10 @@ import java.lang.reflect.Type;
  * @author dbacilio88@outlook.es
  * @since 1/06/2024
  */
-public interface IEventMapperService extends IRegisterService {
-    Message messageBroker(Event<?> event, String messageId, String exchange, String routingKey);
+public interface IEventMapperService {
+    Message messageBroker(Event<?> event, String messageId, String exchange, String routingKey) throws JsonProcessingException;
 
-    Message messageBroker(Event<?> event, String messageId, String exchange, String routingKey, MessageProperties messageProperties);
+    Message messageBroker(Event<?> event, String messageId, String exchange, String routingKey, MessageProperties messageProperties) throws JsonProcessingException;
 
     Event<?> event(Message message, Type type) throws JsonProcessingException;
 

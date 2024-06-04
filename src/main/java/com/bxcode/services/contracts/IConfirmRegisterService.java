@@ -17,6 +17,6 @@ import java.lang.reflect.InvocationTargetException;
  * @author dbacilio88@outlook.es
  * @since 1/06/2024
  */
-public interface IConfirmRegisterService {
+public interface IConfirmRegisterService extends IRegisterService{
     void executeConfirm(Event<?> event) throws InvocationTargetException, IllegalAccessException;
 }

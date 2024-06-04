@@ -52,7 +52,15 @@ public class RabbitConsumer implements IRabbitConsumer {
     private boolean connected;
     private final MessageConfiguration messageConfiguration;
 
-    public RabbitConsumer(final Channel channel, final IEventMapperService mapperService, final Method method, final Type type, final String routingKey, final boolean automaticAck, final Object object, final IConsumerDispatchService dispatchService, final MessageConfiguration messageConfiguration) {
+    public RabbitConsumer(final Channel channel,
+                          final Method method,
+                          final Object object,
+                          final Type type,
+                          final String routingKey,
+                          final boolean automaticAck,
+                          final IEventMapperService mapperService,
+                          final IConsumerDispatchService dispatchService,
+                          final MessageConfiguration messageConfiguration) {
         this.channel = channel;
         this.mapperService = mapperService;
         this.method = method;

@@ -29,6 +29,7 @@ public class ProcessConstant {
     public static final int PARAMETER_NUMBER_TYPES_REQUIRED_CONFIRM = 1;
     public static final int PARAMETER_NUMBER_TYPES_REQUIRED_FIRST_INDEX = 0;
     public static final int PARAMETER_NUMBER_TYPES_REQUIRED_SECOND_INDEX = 1;
+    public static final int PARAMETER_NUMBER_TYPES_REQUIRED_THIRD_INDEX = 2;
     public static final int PARAMETER_NUMBER_REPLAY_CODE = 500;
 }
 

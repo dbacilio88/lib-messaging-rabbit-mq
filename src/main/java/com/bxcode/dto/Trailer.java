@@ -33,5 +33,5 @@ public class Trailer implements Serializable {
     private LocalDateTime received;
     private String lastAgentId;
     private String initialAgentId;
-    private int daraSize;
+    private int dataSize;
 }

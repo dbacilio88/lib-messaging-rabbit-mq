@@ -30,7 +30,7 @@ public interface IConsumerBuilderService {
 
     Object validateBean(Object bean);
 
-    String validateQueue(Object queue);
+    String validateQueue(String queue);
 
     Type validateType(Type type);
 

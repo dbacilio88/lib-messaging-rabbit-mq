@@ -15,6 +15,6 @@ import org.springframework.amqp.core.Message;
  * @author dbacilio88@outlook.es
  * @since 1/06/2024
  */
-public interface ICallBackRegisterService {
+public interface ICallBackRegisterService extends IRegisterService {
     void executeReturn(Message message, int replyCode, String replyText, String exchange, String routingKey);
 }

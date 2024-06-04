@@ -43,7 +43,6 @@ public class BrokerConfiguration {
 
     public ConnectionFactory connectionFactory() {
         try {
-
             final CachingConnectionFactory factory = new CachingConnectionFactory();
             factory.setHost(messageConfiguration.getHost());
             factory.setPort(messageConfiguration.getPort());
@@ -54,12 +53,11 @@ public class BrokerConfiguration {
             factory.setPublisherConfirmType(CachingConnectionFactory.ConfirmType.valueOf(messageConfiguration.getReconnectConsumerType()));
 
             if (isSslConfigurationEnable()) {
-                final SSLContext context = SSLContext.getInstance("TSL");
+                final SSLContext context = SSLContext.getInstance("TLS");
                 context.init(null, null, null);
                 factory.getRabbitConnectionFactory().useSslProtocol(context);
             }
             return factory;
-
         } catch (Exception e) {
             log.error("error in process connection, the SSL context configuration failed, error: {}", e.getMessage());
             throw new BrokerConfigurationException(e.getMessage());
@@ -81,5 +79,3 @@ public class BrokerConfiguration {
         return template;
     }
 }
-
-

@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface BrokerDeclareExchange {
 
-    String[] exchange();
+    String[] exchanges();
 
     String typeName();
 
