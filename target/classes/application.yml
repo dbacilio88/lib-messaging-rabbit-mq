@@ -1,0 +1,18 @@
+rabbit:
+  host: localhost
+  port: 5672
+  username: guest
+  password: guest
+  virtual-host: "/"
+  publisher-return: true
+  publisher-confirm-type: CORRELATED
+  reconnect-consumer-time: 10000
+  reconnect-consumer-tries: 0
+  config:
+    exchange:
+      name: "EXCHANGE-TEST"
+      type: "TOPIC"
+    binding:
+      routing-key: "*.*.*.*.*.metadata"
+    metadata:
+      queue: "EVENT-METADATA"
