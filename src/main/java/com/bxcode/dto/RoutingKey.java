@@ -45,13 +45,13 @@ public class RoutingKey implements Serializable {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(eventType.name());
-        sb.append(SIMPLE_EMPTY_FORMAT);
+        sb.append(SIMPLE_DOT_FORMAT);
         sb.append(origin);
-        sb.append(SIMPLE_EMPTY_FORMAT);
+        sb.append(SIMPLE_DOT_FORMAT);
         sb.append(destiny);
-        sb.append(SIMPLE_EMPTY_FORMAT);
+        sb.append(SIMPLE_DOT_FORMAT);
         sb.append(domain);
-        sb.append(SIMPLE_EMPTY_FORMAT);
+        sb.append(SIMPLE_DOT_FORMAT);
         sb.append(command);
         String add = Optional.ofNullable(additional).orElse(SIMPLE_EMPTY_FORMAT);
         if (!add.trim().isEmpty()) {

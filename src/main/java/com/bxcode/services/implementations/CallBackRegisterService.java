@@ -83,6 +83,7 @@ public class CallBackRegisterService implements ICallBackRegisterService {
         log.debug("executing return call back");
         if (!Objects.isNull(returnsCallback)) {
             ReturnedMessage returnedMessage = new ReturnedMessage(message, replyCode, replyText, exchange, routingKey);
+            log.debug("returnedMessage {}", returnedMessage);
             returnsCallback.returnedMessage(returnedMessage);
         }
     }

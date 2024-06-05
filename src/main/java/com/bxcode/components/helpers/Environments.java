@@ -1,6 +1,7 @@
 package com.bxcode.components.helpers;
 
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
 /**
  * Environments
@@ -15,6 +16,7 @@ import org.springframework.core.env.Environment;
  * @author dbacilio88@outlook.es
  * @since 31/05/2024
  */
+@Component
 public class Environments {
     private final Environment environment;
 

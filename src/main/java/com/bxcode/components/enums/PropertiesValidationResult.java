@@ -1,11 +1,9 @@
 package com.bxcode.components.enums;
 
-import lombok.Getter;
-
 /**
- * ExchangeType
+ * PropertiesValidationResult
  * <p>
- * ExchangeType enum.
+ * PropertiesValidationResult enum.
  * <p>
  * THIS COMPONENT WAS BUILT ACCORDING TO THE DEVELOPMENT STANDARDS
  * AND THE BXCODE APPLICATION DEVELOPMENT PROCEDURE AND IS PROTECTED
@@ -13,20 +11,9 @@ import lombok.Getter;
  *
  * @author Bxcode
  * @author dbacilio88@outlook.es
- * @since 31/05/2024
+ * @since 5/06/2024
  */
-
-public enum ExchangeType {
-
-    DIRECT("direct"),
-    HEADERS("headers"),
-    FANOUT("fanout"),
-    TOPIC("topic");
-
-    @Getter
-    private final String type;
-
-    ExchangeType(String type) {
-        this.type = type;
-    }
+public enum PropertiesValidationResult {
+    PROCESS_VALIDATION_SUCCESS,
+    PROCESS_VALIDATION_FAIL,
 }

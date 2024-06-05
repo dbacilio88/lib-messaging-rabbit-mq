@@ -35,7 +35,7 @@ public class BindingRegisterService implements IBindingRegisterService {
                                   final Environments environments) {
         this.rabbitTemplate = rabbitTemplate;
         this.environments = environments;
-        log.debug("BindingRegisterService load successfully");
+        log.debug("BindingRegisterService loaded successfully");
     }
 
     @Override

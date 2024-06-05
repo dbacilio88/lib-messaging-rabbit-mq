@@ -71,7 +71,7 @@ public class PublisherAspect {
         final String exchangeName = environments.get(annotation.exchange());
 
         var confirmed = publisherService.publish(exchangeName, event);
-        log.debug("published? {}", confirmed);
+        log.info("published confirmed? {}", confirmed);
         return event;
     }
 

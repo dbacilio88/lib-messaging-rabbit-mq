@@ -16,3 +16,7 @@ rabbit:
       routing-key: "*.*.*.*.*.metadata"
     metadata:
       queue: "EVENT-METADATA"
+  queue-properties:
+    x-expires: 600000
+    x-message-ttl: 300000
+    x-queue-type: quorum

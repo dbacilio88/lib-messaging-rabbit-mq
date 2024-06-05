@@ -61,7 +61,6 @@ public class ConsumerRegisterService implements IConsumerRegisterService {
 
     @Override
     public List<AMQP.Queue.BindOk> executeBindings(String queue, BrokerDeclareBinding[] bindings) {
-        log.debug("execute bindings process");
         final List<AMQP.Queue.BindOk> bindOkList = new ArrayList<>();
         for (BrokerDeclareBinding binding : bindings) {
             String routingKey = environments.get(binding.routingKey());
@@ -76,23 +75,19 @@ public class ConsumerRegisterService implements IConsumerRegisterService {
         final Method[] methods = bean.getClass().getDeclaredMethods();
         for (Method method : methods) {
             final BrokerConsumer annotation = method.getAnnotation(BrokerConsumer.class);
-            if (Objects.isNull(annotation)) {
-                log.debug("BrokerConsumer Present");
-                log.debug("registering consumers...");
-                log.debug("auto-ack: {}", annotation.automaticAck());
+            if (Objects.nonNull(annotation)) {
                 if (method.getParameterCount() != 1) {
                     throw new ParameterException("Only 1 parameter allows for BrokerConsumer annotation implementation");
                 }
+
                 final Parameter parameter = method.getParameters()[0];
-                log.debug("Parameter ParameterizedType: {}", parameter.getParameterizedType().getTypeName());
-                log.debug("Parameter TypeName: {}", parameter.getType().getTypeName());
-                log.debug("Parameter Name: {}", parameter.getType().getName());
+
                 if (!parameter.getType().equals(Event.class)) {
                     throw new ParameterException("Parameter to consumer method must be Event.class");
                 }
 
                 for (String queue : annotation.queues()) {
-                    log.debug("queue to create: {}", queue);
+
                     if (queue == null || queue.trim().isEmpty()) {
                         if (annotation.bindings().length < 1) {
                             throw new ParameterException("when queue name is null or empty, bindings should not be empty");
@@ -104,6 +99,7 @@ public class ConsumerRegisterService implements IConsumerRegisterService {
                     }
 
                     final String nameQueue = environments.get(queue);
+                    log.info("queue to create: {}", nameQueue);
                     final boolean ack = Boolean.parseBoolean(environments.get(Boolean.toString(annotation.automaticAck())));
                     final Consumer consumer = consumerBuilderService
                             .build(this.rabbitTemplate.execute(channel -> channel),
@@ -118,17 +114,14 @@ public class ConsumerRegisterService implements IConsumerRegisterService {
                     executeBindings(nameQueue, annotation.bindings());
 
                     final String tag = rabbitTemplate.execute(channel -> channel.basicConsume(nameQueue, ack, consumer));
-                    log.debug("consumer registered, tag: {}, queueName: {}", tag, nameQueue);
+                    log.info("consumer registered, tag: {}, queueName: {}", tag, nameQueue);
                 }
             }
         }
     }
 
     private void executeQueues(BrokerDeclareQueue[] queues) {
-        this.log.debug("execute queues process");
         for (BrokerDeclareQueue declare : queues)
             this.queueRegisterService.declare(declare);
     }
 }
-
-

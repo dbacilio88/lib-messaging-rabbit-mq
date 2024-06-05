@@ -36,7 +36,7 @@ public class CallBackBuilderService implements ICallBackBuilderService {
 
     @Override
     public RabbitTemplate.ReturnsCallback build(Method method, Object object) {
-        log.debug("build method {}", method.toString());
+        log.debug("CallBackBuilderService build method {}", method.toString());
         return new RabbitCallback(mapperService, method, object);
     }
 }

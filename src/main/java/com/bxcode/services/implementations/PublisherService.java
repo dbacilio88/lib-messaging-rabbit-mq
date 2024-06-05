@@ -1,7 +1,9 @@
 package com.bxcode.services.implementations;
 
+import com.bxcode.components.enums.PropertiesValidationResult;
 import com.bxcode.components.exceptions.ParameterException;
 import com.bxcode.components.exceptions.PublishEventException;
+import com.bxcode.components.validations.IMessagePropertiesValidation;
 import com.bxcode.dto.Event;
 import com.bxcode.dto.Metadata;
 import com.bxcode.services.contracts.ICallBackRegisterService;
@@ -83,8 +85,9 @@ public class PublisherService implements IPublisherService {
         String messageId;
         final MessageProperties messageProperties = Optional.ofNullable(event.getProperties()).orElse(new MessageProperties());
         final CorrelationData correlationData = new CorrelationData();
+        final PropertiesValidationResult validateCorrelationId = IMessagePropertiesValidation.validateCorrelationId().apply(messageProperties);
 
-        if (true) {
+        if (PropertiesValidationResult.PROCESS_VALIDATION_SUCCESS.equals(validateCorrelationId)) {
             correlationData.setId(messageProperties.getCorrelationId());
             messageId = messageProperties.getCorrelationId();
         } else {
@@ -94,7 +97,9 @@ public class PublisherService implements IPublisherService {
             correlationData.setId(messageId);
         }
 
-        correlationData.getFuture().addCallback(confirm -> {
+        final PropertiesValidationResult validateReplyTo = IMessagePropertiesValidation.validateReplyTo().apply(messageProperties);
+
+        correlationData.getFuture().toCompletableFuture().thenAccept(confirm -> {
             StringBuilder reason = new StringBuilder();
             Optional.ofNullable(confirm).ifPresentOrElse(c -> reason.append(c.getReason()), () -> reason.append("error the confirm instance is null"));
             Message message = null;
@@ -103,7 +108,6 @@ public class PublisherService implements IPublisherService {
             } catch (JsonProcessingException e) {
                 throw new PublishEventException(reason.toString());
             }
-
             try {
 
                 if (Objects.isNull(confirm) || !confirm.isAck()) {
@@ -118,26 +122,22 @@ public class PublisherService implements IPublisherService {
                 returnCallbackService.executeReturn(message, PARAMETER_NUMBER_REPLAY_CODE, reason.toString(), exchange, routingKey);
                 throw new PublishEventException(reason.toString(), e);
             }
-        }, throwable -> {
+        }).exceptionally(throwable -> {
             log.error("message: {}", throwable.getMessage());
             log.error("stacktrace: {}", throwable.getStackTrace(), throwable);
+            return null;
         });
 
-
-        if (!hasMetadata && reply) {
+        if (!hasMetadata && reply && PropertiesValidationResult.PROCESS_VALIDATION_SUCCESS.equals(validateReplyTo)) {
             log.debug("reply message");
             log.debug("replyTo: {}, correlationData: {}", messageProperties.getReplyTo(), correlationData);
             messageProperties.setReplyTo(null);
 
             final var finalMessage = generateMessage(event, messageId, exchange, routingKey, messageProperties);
-            log.debug("message to publish true: {}", finalMessage);
             finalMessage.getMessageProperties().setConsumerQueue(messageProperties.getReplyTo());
             this.rabbitTemplate.convertAndSend(messageProperties.getReplyTo(), finalMessage);
         } else {
-
             final var finalMessage = generateMessage(event, messageId, exchange, routingKey, messageProperties);
-            log.debug("message to publish else: {}", finalMessage);
-            log.debug("exchangeName: {}, routingKey: {}, CorrelationData: {}", exchange, routingKey, correlationData);
             this.rabbitTemplate.convertAndSend(exchange, routingKey, finalMessage, correlationData);
         }
 
@@ -150,7 +150,6 @@ public class PublisherService implements IPublisherService {
 
     @Override
     public <T> Event<T> publishAndReceived(String exchange, Event<?> event, Class<T> body) throws JsonProcessingException {
-        log.debug("event to publish: {}", event);
         final Metadata metadata = event.getMetadata();
         final StringBuilder builder = new StringBuilder(event.getRoutingKey().toString());
         String routingKey;
@@ -162,18 +161,20 @@ public class PublisherService implements IPublisherService {
         final Timestamp timestamp = new Timestamp(date.getTime());
         final String messageId = UUID.randomUUID().toString().toUpperCase(Locale.ENGLISH).concat("-").concat(simpleDateFormat.format(timestamp));
         final CorrelationData correlationData = new CorrelationData(messageId);
-        correlationData.getFuture().addCallback(confirm -> {
-            if (Objects.nonNull(confirm)) {
-                log.debug("ack: {}", confirm.isAck());
-                log.debug("reason: {}", confirm.getReason());
-            }
-        }, throwable -> {
-            log.debug("message: {}", throwable.getMessage());
-            log.error("exception: {}", throwable.getMessage(), throwable);
-        });
+        correlationData.getFuture().toCompletableFuture()
+                .thenAccept(confirm -> {
+                    if (Objects.nonNull(confirm)) {
+                        log.debug("ack: {}", confirm.isAck());
+                        log.debug("reason: {}", confirm.getReason());
+                    }
+                })
+                .exceptionally(throwable -> {
+                    log.debug("message: {}", throwable.getMessage());
+                    log.error("exception: {}", throwable.getMessage(), throwable);
+                    return null;
+                });
 
         final Message message = eventMapperService.messageBroker(event, messageId, exchange, routingKey);
-        log.debug("message to publish: {}", message);
         var response = this.rabbitTemplate.convertSendAndReceiveAsType(exchange, routingKey, message, correlationData, type);
         log.debug("response: {}", response);
         return eventMapperService.event(response, body);

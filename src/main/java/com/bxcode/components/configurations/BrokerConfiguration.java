@@ -50,7 +50,7 @@ public class BrokerConfiguration {
             factory.setPassword(messageConfiguration.getPassword());
             factory.setVirtualHost(messageConfiguration.getVirtualHost());
             factory.setPublisherReturns(messageConfiguration.isPublisherReturn());
-            factory.setPublisherConfirmType(CachingConnectionFactory.ConfirmType.valueOf(messageConfiguration.getReconnectConsumerType()));
+            factory.setPublisherConfirmType(CachingConnectionFactory.ConfirmType.valueOf(messageConfiguration.getPublisherConfirmType()));
 
             if (isSslConfigurationEnable()) {
                 final SSLContext context = SSLContext.getInstance("TLS");
@@ -76,6 +76,7 @@ public class BrokerConfiguration {
         final MessageConverter converter = new RabbitConverter(mapperService);
         template.setMessageConverter(converter);
         template.setDefaultReceiveQueue(ProcessConstant.PARAMETER_DEFAULT_RECEIVED_QUEUE);
+        log.debug("creating rabbit template connected {}", template.isRunning());
         return template;
     }
 }

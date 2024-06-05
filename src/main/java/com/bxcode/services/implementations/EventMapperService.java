@@ -16,11 +16,11 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Base64Utils;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.Optional;
 
 /**
@@ -89,7 +89,6 @@ public class EventMapperService implements IEventMapperService {
         eventMessage.getMessageProperties().setHeader("request-id", messageId);
         eventMessage.getMessageProperties().setHeader("created", LocalDateTime.now());
         eventMessage.getMessageProperties().setAppId(event.getRoutingKey().getOrigin());
-
         final MessagePostProcessor messagePostProcessor = message -> {
             log.debug("MessagePostProcessor: {}", message);
             return message;
@@ -100,11 +99,9 @@ public class EventMapperService implements IEventMapperService {
     @Override
     public Event<?> event(Message message, Type type) throws JsonProcessingException {
         log.debug("mapping msg: {}, to Type: {}", message, type);
-        final String data = new String(Base64Utils.decode(message.getBody()), StandardCharsets.UTF_8);
-        log.debug("data: {}", data);
+        final String data = new String(Base64.getDecoder().decode(message.getBody()));
         JavaType javaType = buildJavaTypeFromType(type);
         final Event<?> event = objectMapper.readValue(data, javaType);
-        log.debug("event: {}", event);
         event.setProperties(message.getMessageProperties());
         return event;
     }
@@ -127,7 +124,7 @@ public class EventMapperService implements IEventMapperService {
 
     public <T> byte[] encryptBody(final T body) throws JsonProcessingException {
         final String bodyTmp = this.objectMapper.writeValueAsString(body);
-        return Base64Utils.encode(bodyTmp.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encode(bodyTmp.getBytes(StandardCharsets.UTF_8));
     }
 
     public JavaType buildJavaTypeFromType(Type type) {

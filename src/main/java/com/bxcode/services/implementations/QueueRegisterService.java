@@ -35,11 +35,20 @@ public class QueueRegisterService implements IQueueRegisterService {
     private final RabbitTemplate rabbitTemplate;
     private final Environments environments;
 
-    public QueueRegisterService(MessageConfiguration messageConfiguration, RabbitTemplate rabbitTemplate, Environments environments) {
+    public QueueRegisterService(final MessageConfiguration messageConfiguration,
+                                final RabbitTemplate rabbitTemplate,
+                                final Environments environments) {
         this.messageConfiguration = messageConfiguration;
         this.rabbitTemplate = rabbitTemplate;
         this.environments = environments;
         log.debug("QueueRegisterService loaded successfully");
+    }
+
+    @Override
+    public void register(Object bean, String nameBean) {
+        final BrokerDeclareQueue annotation = bean.getClass().getDeclaredAnnotation(BrokerDeclareQueue.class);
+
+        declare(annotation);
     }
 
     @Override
@@ -48,7 +57,6 @@ public class QueueRegisterService implements IQueueRegisterService {
             for (String queue : annotation.queues()) {
                 final String queueName = environments.get(queue);
                 final Map<String, Object> properties = buildQueueProperties(annotation.queueProperties());
-                log.debug("annotation {} is present, declaring queue: {}", BrokerDeclareQueue.class, queueName);
                 final AMQP.Queue.DeclareOk declareOk = this.rabbitTemplate.execute(channel ->
                         channel.queueDeclare(queueName, currentAnnotation.durable(), currentAnnotation.exclusive(), currentAnnotation.autoDelete(), properties)
                 );
@@ -57,18 +65,16 @@ public class QueueRegisterService implements IQueueRegisterService {
         });
     }
 
-    @Override
-    public void register(Object bean, String nameBean) {
-        final BrokerDeclareQueue annotation = bean.getClass().getDeclaredAnnotation(BrokerDeclareQueue.class);
-        declare(annotation);
-    }
 
     public Map<String, Object> buildQueueProperties(QueueProperty[] queueProperties) {
         final Map<String, Object> properties = new HashMap<>();
-        for (QueueProperty property : queueProperties)
+        for (QueueProperty property : queueProperties) {
             properties.put(this.environments.get(property.name()), this.environments.get(property.value()));
-        if (Optional.ofNullable(this.messageConfiguration.getQueueProperties()).isPresent())
+
+        }
+        if (Optional.ofNullable(this.messageConfiguration.getQueueProperties()).isPresent()) {
             properties.putAll(this.messageConfiguration.getQueueProperties());
+        }
         return properties;
     }
 }

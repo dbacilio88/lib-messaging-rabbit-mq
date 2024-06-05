@@ -26,11 +26,11 @@ import java.util.Map;
 @Configuration
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "rabbit")
-@ComponentScan("com.bxcode")
-@ComponentScan("com.bxcode.services")
 @ComponentScan("com.bxcode.services.implementations")
-@ComponentScan("com.bxcode.components")
 @ComponentScan("com.bxcode.components.annotations")
+@ComponentScan("com.bxcode.services")
+@ComponentScan("com.bxcode.components")
+@ComponentScan("com.bxcode")
 public class MessageConfiguration {
     private String host;
     private String username;
@@ -39,7 +39,7 @@ public class MessageConfiguration {
     private String virtualHost;
     private boolean publisherReturn;
     private long reconnectConsumerTime;
-    private String reconnectConsumerType;
+    private String publisherConfirmType;
     private int reconnectConsumerTries;
     private Map<String, Object> queueProperties;
     private boolean sslEnable;

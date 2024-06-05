@@ -9,6 +9,7 @@ import com.bxcode.services.contracts.IConsumerDispatchService;
 import com.bxcode.services.contracts.IEventMapperService;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,9 @@ import static com.bxcode.constants.ProcessConstant.*;
  * @author dbacilio88@outlook.es
  * @since 4/06/2024
  */
+
 @Log4j2
+@Getter
 @Service
 public class ConsumerBuilderService implements IConsumerBuilderService {
 
@@ -43,14 +46,29 @@ public class ConsumerBuilderService implements IConsumerBuilderService {
     }
 
     @Override
-    public Consumer build(Channel channel, Method method, Object bean, Type type, String queue, boolean automaticAck, IEventMapperService mapper, IConsumerDispatchService consumer) {
-        validateChannel(channel);
-        validateMethod(method);
+    public Consumer build(final Channel channel,
+                          final Method method,
+                          final Object bean,
+                          final Type type,
+                          final String queue,
+                          final boolean automaticAck,
+                          final IEventMapperService mapper,
+                          final IConsumerDispatchService consumer) {
         validateBean(bean);
-        validateType(type);
+        validateMethod(method);
         validateQueue(queue);
-
-        return new RabbitConsumer(channel, method, bean, type, queue, automaticAck, mapper, consumer, this.messageConfiguration);
+        validateChannel(channel);
+        validateType(type);
+        return new RabbitConsumer(
+                channel,
+                method,
+                bean,
+                type,
+                queue,
+                automaticAck,
+                mapper,
+                consumer,
+                this.messageConfiguration);
     }
 
     @Override

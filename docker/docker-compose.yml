@@ -1,12 +1,26 @@
 services:
   microservices-rabbit:
-    build:
-      context: image
-      dockerfile: Dockerfile
-    container_name: microservices-rabbit
+    #build:
+    #  context: image
+    #  dockerfile: Dockerfile
+    image: rabbitmq:3.13-management-alpine
+    container_name: microservices-rabbit-dev
     restart: always
+    logging:
+      options:
+        max-file: 3
+        max-size: 100m
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PAST=guest
     ports:
       - 5672:5672
       - 15672:15672
     volumes:
       - ./volume/rabbit:/var/lib/rabbitmq
+    networks:
+      - rabbit-mq
+
+networks:
+  rabbit-mq:
+    driver: bridge

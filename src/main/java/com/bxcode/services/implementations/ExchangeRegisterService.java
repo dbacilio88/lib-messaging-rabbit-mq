@@ -45,7 +45,6 @@ public class ExchangeRegisterService implements IExchangeRegisterService {
         Optional.ofNullable(annotation).ifPresent(currentAnnotation -> {
 
             for (String exchange : annotation.exchanges()) {
-
                 final String typeName = environments.get(currentAnnotation.typeName());
                 final ExchangeType exchangeType = ExchangeType.valueOf(typeName);
                 final String exchangeName = environments.get(exchange);

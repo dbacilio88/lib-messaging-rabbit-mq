@@ -1,0 +1,3 @@
+# auto configure microservices libraries
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.bxcode.components.configurations.MessageConfiguration

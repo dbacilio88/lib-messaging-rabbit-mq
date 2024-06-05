@@ -101,7 +101,7 @@ public class RabbitConsumer implements IRabbitConsumer {
             try {
                 sleep(time);
                 String consumer = this.channel.basicConsume(routingKey, automaticAck, this);
-                log.info("new consumer, tag:{}, queue name:{}", consumer, routingKey);
+                log.debug("new consumer, tag:{}, queue name:{}", consumer, routingKey);
                 connected = true;
             } catch (IOException | AmqpException | InterruptedException ex) {
                 log.error("ShutdownSignalException amqpException error: {}", e.getMessage());
