@@ -1,22 +1,24 @@
-rabbit:
-  host: localhost
-  port: 5672
-  username: guest
-  password: guest
-  virtual-host: "/"
-  publisher-return: true
-  publisher-confirm-type: CORRELATED
-  reconnect-consumer-time: 10000
-  reconnect-consumer-tries: 0
-  config:
-    exchange:
-      name: "EXCHANGE-TEST"
-      type: "TOPIC"
-    binding:
-      routing-key: "*.*.*.*.*.metadata"
-    metadata:
-      queue: "EVENT-METADATA"
-  queue-properties:
-    x-expires: 600000
-    x-message-ttl: 300000
-    x-queue-type: quorum
+#rabbit:
+#  host: localhost
+#  port: 5672
+#  username: guest
+#  password: guest
+#  virtual-host: "/"
+#  publisher-return: true
+#  publisher-confirm-type: CORRELATED
+#  reconnect-consumer-time: 10000
+#  reconnect-consumer-tries: 0
+#  queue-properties:
+#    x-expires: 600000
+#    x-message-ttl: 300000
+#   x-queue-type: quorum
+  #config:
+  #  exchange:
+  #    name: "EXCHANGE-TEST"
+  #    type: "TOPIC"
+  #  binding:
+  #    routing-key: "*.*.*.*.*.metadata"
+  #  metadata:
+  #    queue: "EVENT-METADATA"
+ # ssl-enable: false
+
