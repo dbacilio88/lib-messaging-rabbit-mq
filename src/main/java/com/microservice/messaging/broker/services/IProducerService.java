@@ -1,6 +1,7 @@
 package com.microservice.messaging.broker.services;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.microservice.messaging.broker.dto.MQEvent;
 
 /**
@@ -18,9 +19,5 @@ import com.microservice.messaging.broker.dto.MQEvent;
  */
 
 public interface IProducerService {
-    boolean producer(String exchange, MQEvent<?> event);
-
-    boolean producer(String exchange, MQEvent<?> event, boolean retry);
-
-    <T> MQEvent<T> producerAndConsumer(String exchange, MQEvent<T> event, Class<T> clazz);
+    boolean producer(String exchange, MQEvent<?> event, boolean retry) throws JsonProcessingException;
 }

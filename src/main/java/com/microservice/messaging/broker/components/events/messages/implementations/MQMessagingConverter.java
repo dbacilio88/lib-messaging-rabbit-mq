@@ -1,4 +1,4 @@
-package com.microservice.messaging.broker.components.events.messages;
+package com.microservice.messaging.broker.components.events.messages.implementations;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microservice.messaging.broker.components.base.MQBase;
 import com.microservice.messaging.broker.components.events.IMQEventMessageService;
+import com.microservice.messaging.broker.components.events.messages.contracts.IMQMessagingConverter;
 import com.microservice.messaging.broker.components.exceptions.MQBrokerException;
 import com.microservice.messaging.broker.dto.MQEvent;
 import lombok.extern.log4j.Log4j2;
@@ -39,7 +40,7 @@ public class MQMessagingConverter extends MQBase implements IMQMessagingConverte
     private final ObjectMapper objectMapper;
 
     public MQMessagingConverter(final IMQEventMessageService eventMessageService) {
-        super(MQMessagingConverter.class.getName());
+        super(MQMessagingConverter.class.getSimpleName());
         this.eventMessageService = eventMessageService;
         objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new Jdk8Module());

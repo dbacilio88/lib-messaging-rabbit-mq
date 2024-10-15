@@ -77,7 +77,6 @@ public class MQEventMessageService extends MQBase implements IMQEventMessageServ
 
         trailer.setSent(LocalDateTime.now());
         trailer.setLastAgentId(event.getRoutingKey().getOrigin());
-
         Optional.ofNullable(event.getData()).ifPresent(data -> {
             try {
                 var json = this.objectMapper.writeValueAsString(data);
@@ -88,14 +87,13 @@ public class MQEventMessageService extends MQBase implements IMQEventMessageServ
         });
 
         event.setMQTrailer(trailer);
-
         var eventMessage = new MQEventMessage(encryptBody(event), event.getRoutingKey().getOrigin());
         eventMessage.getMessageProperties().setMessageId(messageId);
         eventMessage.getMessageProperties().setHeader("request-id", messageId);
         eventMessage.getMessageProperties().setHeader("created", LocalDateTime.now().toString());
         eventMessage.getMessageProperties().setAppId(event.getRoutingKey().getOrigin());
         final MessagePostProcessor messagePostProcessor = message -> {
-            log.debug("postProcessorMessage: {}", message);
+            log.debug("message {}", message);
             return message;
         };
         return messagePostProcessor.postProcessMessage(eventMessage, null);

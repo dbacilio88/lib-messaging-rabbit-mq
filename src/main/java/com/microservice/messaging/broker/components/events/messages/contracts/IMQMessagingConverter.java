@@ -1,4 +1,4 @@
-package com.microservice.messaging.broker.components.events.messages;
+package com.microservice.messaging.broker.components.events.messages.contracts;
 
 
 import org.springframework.amqp.support.converter.SmartMessageConverter;

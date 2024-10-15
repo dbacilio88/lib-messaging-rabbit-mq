@@ -23,6 +23,5 @@ import java.lang.reflect.Method;
 public interface IMQConfirme {
     void confirm(MQEvent<?> event) throws InvocationTargetException, IllegalAccessException;
 
-    void register(Method method);
-    void register(Object bean, String name);
+    void register(Method method, Object bean);
 }

@@ -2,6 +2,9 @@ package com.microservice.messaging.broker.services.factory;
 
 
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+
+import java.lang.reflect.Method;
 
 /**
  * IMQCallBack
@@ -18,6 +21,9 @@ import org.springframework.amqp.core.Message;
  */
 
 public interface IMQCallBack {
-    void register(Object bean, String name);
+    void register(Method method, Object bean);
+
     void execute(Message message, int code, String text, String exchange, String routingKey);
+
+    RabbitTemplate.ReturnsCallback build(Method method, Object bean);
 }

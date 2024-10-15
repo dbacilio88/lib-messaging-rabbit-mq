@@ -1,9 +1,10 @@
-package com.microservice.messaging.broker.components.events.messages;
+package com.microservice.messaging.broker.components.events.messages.implementations;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.microservice.messaging.broker.components.base.MQBase;
 import com.microservice.messaging.broker.components.events.IMQEventMessageService;
+import com.microservice.messaging.broker.components.events.messages.contracts.IMQMessagingReturnsCallback;
 import com.microservice.messaging.broker.dto.MQEvent;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.core.ReturnedMessage;

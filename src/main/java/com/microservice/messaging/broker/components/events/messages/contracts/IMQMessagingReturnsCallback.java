@@ -1,16 +1,14 @@
-package com.microservice.messaging.broker.services.builder;
+package com.microservice.messaging.broker.components.events.messages.contracts;
 
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
-import java.lang.reflect.Method;
-
 /**
- * IMQCallBackBuilder
+ * IMQMessagingReturnsCallback
  * <p>
- * IMQCallBackBuilder interface.
+ * IMQMessagingReturnsCallback interface.
  * <p>
- * This interface specifies the requirements for the IMQCallBackBuilder component,
+ * This interface specifies the requirements for the IMQMessagingReturnsCallback component,
  * developed in accordance with the development standards established by bxcode.
  * Collaboration is encouraged for the enhancement and expansion of the lib-messaging-rabbit-mq.
  *
@@ -19,6 +17,5 @@ import java.lang.reflect.Method;
  * @since 12/10/2024
  */
 
-public interface IMQCallBackBuilder {
-    RabbitTemplate.ReturnsCallback build(Method method, Object bean);
+public interface IMQMessagingReturnsCallback extends RabbitTemplate.ReturnsCallback {
 }

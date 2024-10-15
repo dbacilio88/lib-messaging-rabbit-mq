@@ -1,10 +1,8 @@
 package com.microservice.messaging.broker.services.factory;
 
 
-import com.microservice.messaging.broker.components.annotations.MQConfirmCallBack;
-import com.microservice.messaging.broker.components.annotations.MQDeclareBinding;
-import com.microservice.messaging.broker.components.annotations.MQDeclareExchange;
-import com.microservice.messaging.broker.components.annotations.MQDeclareQueue;
+import com.microservice.messaging.broker.components.annotations.*;
+import com.microservice.messaging.broker.services.IConsumerService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -37,57 +35,79 @@ public class BrokerRegistry {
         this.applicationContext = applicationContext;
     }
 
+    public void registerCallback(Object bean, String beanName) {
+        final Stream<Method> methods = Arrays.stream(bean.getClass().getDeclaredMethods());
+        methods.forEach(method -> {
+            if (method.isAnnotationPresent(MQReturnCallBack.class)) {
+                IMQCallBack callBackRegister = applicationContext.getBean(IMQCallBack.class);
+                log.debug("Registering callback method: {}", method.getName());
+                callBackRegister.register(method, bean);
+                log.debug("Registered return callback successfully {}", beanName);
+            }
+        });
+    }
 
     public void registerExchange(Object bean, String beanName) {
         Class<?> beanClass = bean.getClass();
         if (beanClass.isAnnotationPresent(MQDeclareExchange.class)) {
-            log.info("Registering exchange beanName {}", beanName);
             IMQExchange exchangeRegistry = applicationContext.getBean(IMQExchange.class);
             final MQDeclareExchange annotation = beanClass.getAnnotation(MQDeclareExchange.class);
             for (String t : annotation.exchanges()) {
                 exchangeRegistry.register(t, annotation);
             }
-            log.info("Registered exchanges successfully");
-        }
-    }
-
-    public void registerQueue(Object bean, String beanName) {
-        Class<?> beanClass = bean.getClass();
-        if (beanClass.isAnnotationPresent(MQDeclareQueue.class)) {
-            log.info("Registering queue beanName {}", beanName);
-            IMQQueue queueRegistry = applicationContext.getBean(IMQQueue.class);
-            final MQDeclareQueue annotation = beanClass.getAnnotation(MQDeclareQueue.class);
-            for (String q : annotation.queues()) {
-                queueRegistry.register(q, annotation);
-            }
-            log.info("Registered queue successfully");
+            log.debug("Registered exchanges successfully {}", beanName);
         }
     }
 
     public void registerBinding(Object bean, String beanName) {
         Class<?> beanClass = bean.getClass();
         if (beanClass.isAnnotationPresent(MQDeclareBinding.class)) {
-            log.info("Registering binding beanName {}", beanName);
             IMQBinding bindingRegistry = applicationContext.getBean(IMQBinding.class);
             final MQDeclareBinding annotation = beanClass.getAnnotation(MQDeclareBinding.class);
-            bindingRegistry.register(annotation.exchange(), annotation);
-            log.info("Registered binding successfully");
+            bindingRegistry.register(annotation);
+            log.debug("Registered binding successfully {}", beanName);
         }
     }
 
+
+    public void registerQueue(Object bean, String beanName) {
+        Class<?> beanClass = bean.getClass();
+        if (beanClass.isAnnotationPresent(MQDeclareQueue.class)) {
+            IMQQueue queueRegistry = applicationContext.getBean(IMQQueue.class);
+            final MQDeclareQueue annotation = beanClass.getAnnotation(MQDeclareQueue.class);
+            for (String q : annotation.queues()) {
+                queueRegistry.register(q, annotation);
+            }
+            log.debug("Registered queue successfully {}", beanName);
+        }
+    }
+
+
     public void registerConfirm(Object bean, String beanName) {
         Class<?> beanClass = bean.getClass();
-        if (beanClass.isAnnotationPresent(MQConfirmCallBack.class)) {
-            log.info("Registering confirm callback beanName {}", beanName);
-            IMQConfirme confirmeRegistry = applicationContext.getBean(IMQConfirme.class);
-            final MQConfirmCallBack annotation = beanClass.getAnnotation(MQConfirmCallBack.class);
-            Stream<Method> methodStream = Arrays.stream(beanClass.getDeclaredMethods());
-            methodStream.forEach(method -> {
-                log.info("method {}", method);
-                confirmeRegistry.register(method);
 
-            });
-            log.info("Registered confirm successfully");
+        final Stream<Method> methodStream = Arrays.stream(bean.getClass().getDeclaredMethods());
+        methodStream.forEach(method -> {
+            if (method.isAnnotationPresent(MQConfirmCallBack.class)) {
+                log.info("beanClass {}", beanClass.getName());
+                IMQConfirme confirmeRegistry = applicationContext.getBean(IMQConfirme.class);
+                confirmeRegistry.register(method, bean);
+                log.debug("Registered confirm successfully {}", beanName);
+            }
+
+        });
+
+    }
+
+    public void registerConsumer(Object bean, String beanName) {
+        Class<?> beanClass = bean.getClass();
+        final Method[] methods = beanClass.getDeclaredMethods();
+        for (Method m : methods) {
+            if (m.isAnnotationPresent(MQBrokerConsumer.class)) {
+                IConsumerService consumerService = applicationContext.getBean(IConsumerService.class);
+                consumerService.register(m, bean);
+                log.debug("Registered consumer successfully {}", beanName);
+            }
         }
     }
 }

@@ -25,6 +25,10 @@ import java.util.Map;
 @EnableConfigurationProperties
 @Configuration
 @ConfigurationProperties(prefix = "rabbit")
+//@ComponentScan("com.microservice.messaging.broker.components.aspects")
+//@ComponentScan("com.microservice.messaging.broker.components")
+//@ComponentScan("com.microservice.messaging.broker.services")
+//@ComponentScan("com.microservice.messaging.broker")
 public class RabbitMQProperties {
     private String host;
     private String username;

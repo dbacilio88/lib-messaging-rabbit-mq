@@ -2,9 +2,13 @@ package com.microservice.messaging.broker.services;
 
 
 import com.microservice.messaging.broker.components.annotations.MQDeclareBinding;
-import com.rabbitmq.client.AMQP;
+import com.microservice.messaging.broker.components.events.IMQEventMessageService;
+import com.microservice.messaging.broker.services.dispatch.IMQConsumerDispatch;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Consumer;
 
-import java.util.List;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 
 /**
  * IConsumerService
@@ -21,6 +25,11 @@ import java.util.List;
  */
 
 public interface IConsumerService {
-    void register(Object bean, String name);
-    List<AMQP.Queue.BindOk> executeBinding(String queue, MQDeclareBinding[] bindings);
+    String PARAM_NULL_MSG_EXCEPTION = "parameter %s is required, please set a value to this field";
+
+    void register(Method method, Object bean);
+
+    void executeBinding(String queue, MQDeclareBinding[] bindings);
+
+    Consumer build(Channel channel, Method method, Object bean, Type type, String queueName, boolean automaticAck, IMQEventMessageService eventMessageService, IMQConsumerDispatch consumerDispatch);
 }

@@ -7,9 +7,11 @@ import com.microservice.messaging.broker.components.annotations.MQDeclareQueue;
 import com.microservice.messaging.broker.components.base.MQBase;
 import com.microservice.messaging.broker.components.environments.MQEnvironment;
 import com.microservice.messaging.broker.components.events.IMQEventMessageService;
+import com.microservice.messaging.broker.components.events.messages.implementations.MQMessagingConsumer;
 import com.microservice.messaging.broker.components.exceptions.MQBrokerException;
+import com.microservice.messaging.broker.components.properties.RabbitMQProperties;
+import com.microservice.messaging.broker.components.utils.MQUtility;
 import com.microservice.messaging.broker.dto.MQEvent;
-import com.microservice.messaging.broker.services.builder.IMQConsumerBuilder;
 import com.microservice.messaging.broker.services.dispatch.IMQConsumerDispatch;
 import com.microservice.messaging.broker.services.factory.IMQQueue;
 import com.rabbitmq.client.AMQP;
@@ -20,10 +22,13 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+
+import static com.microservice.messaging.broker.constants.RabbitMQConstant.*;
 
 /**
  * ConsumerService
@@ -46,29 +51,30 @@ public class ConsumerService extends MQBase implements IConsumerService {
 
     private final RabbitTemplate rabbitTemplate;
     private final MQEnvironment mqEnvironment;
-    private final IMQConsumerBuilder consumerBuilder;
     private final IMQQueue imqQueue;
     private final IMQEventMessageService eventMessageService;
     private final IMQConsumerDispatch consumerDispatch;
+    private final RabbitMQProperties rabbitMQProperties;
 
-    public ConsumerService(final RabbitTemplate rabbitTemplate,
-                           final MQEnvironment mqEnvironment,
-                           final IMQConsumerBuilder consumerBuilder,
-                           final IMQQueue imqQueue,
-                           final IMQEventMessageService eventMessageService,
-                           final IMQConsumerDispatch consumerDispatch) {
+    public ConsumerService(
+            final RabbitTemplate rabbitTemplate,
+            final MQEnvironment mqEnvironment,
+            final IMQConsumerDispatch consumerDispatch,
+            final IMQEventMessageService eventMessageService,
+            final IMQQueue imqQueue, RabbitMQProperties rabbitMQProperties
+    ) {
         super(ConsumerService.class.getSimpleName());
         this.rabbitTemplate = rabbitTemplate;
         this.mqEnvironment = mqEnvironment;
-        this.consumerBuilder = consumerBuilder;
         this.imqQueue = imqQueue;
         this.eventMessageService = eventMessageService;
         this.consumerDispatch = consumerDispatch;
+        this.rabbitMQProperties = rabbitMQProperties;
     }
 
 
     @Override
-    public List<AMQP.Queue.BindOk> executeBinding(String queue, MQDeclareBinding[] bindings) {
+    public void executeBinding(String queue, MQDeclareBinding[] bindings) {
         log.debug("execute bindings process");
         final List<AMQP.Queue.BindOk> bindOkList = new ArrayList<>();
         for (MQDeclareBinding binding : bindings) {
@@ -76,55 +82,130 @@ public class ConsumerService extends MQBase implements IConsumerService {
             var exchange = this.mqEnvironment.get(binding.exchange());
             bindOkList.add(this.rabbitTemplate.execute(channel -> channel.queueBind(queue, exchange, routingKey)));
         }
-        return bindOkList;
+        log.debug("bindOkList {}", bindOkList);
+
     }
 
+
     @Override
-    public void register(Object bean, String name) {
-        final Method[] methods = bean.getClass().getDeclaredMethods();
+    public void register(Method method, Object bean) {
 
-        for (final Method method : methods) {
-            final MQBrokerConsumer annotation = method.getAnnotation(MQBrokerConsumer.class);
-            if (Objects.nonNull(annotation)) {
-                log.info("Registering MQBrokerConsumer name annotation {} auto-ack {}", annotation, annotation.isAck());
-                if (method.getParameterCount() != 1) {
-                    throw new MQBrokerException("MQBrokerConsumer must have exactly one parameter");
-                }
-                final Parameter parameter = method.getParameters()[0];
-                if (!parameter.getType().equals(MQEvent.class)) {
-                    throw new MQBrokerException("MQBrokerConsumer must have exactly one parameter");
-                }
-                for (String queue : annotation.queues()) {
-                    log.info("queue to create {}", queue);
-                    if (queue == null || queue.trim().isEmpty()) {
-                        if (annotation.declareBindings().length < 1) {
-                            throw new MQBrokerException("MQBrokerConsumer must have at least one binding");
-                        }
-                        final AMQP.Queue.DeclareOk declareOk = rabbitTemplate.execute(Channel::queueDeclare);
-                        assert declareOk != null;
-                        queue = declareOk.getQueue();
-                        log.info("new queue name {}", queue);
-                    }
-                    final String finalQueue = mqEnvironment.get(queue);
-                    final boolean automaticAck = Boolean.parseBoolean(mqEnvironment.get(Boolean.toString(annotation.isAck())));
+        final MQBrokerConsumer annotation = method.getAnnotation(MQBrokerConsumer.class);
 
-                    Consumer consumer = this.consumerBuilder.build(this.rabbitTemplate.execute(channel -> channel),
-                            method, bean, parameter.getType(), finalQueue, automaticAck, eventMessageService, consumerDispatch);
+        if (Objects.nonNull(annotation)) {
+            log.debug("Registering MQBrokerConsumer name annotation {} auto-ack {}", annotation, annotation.isAck());
 
+            validateConsumerMethod(method);
 
-                    executeQueues(annotation.declareQueues());
-                    executeBinding(queue, annotation.declareBindings());
-                    final String consumerTag = this.rabbitTemplate.execute(channel -> channel.basicConsume(finalQueue, automaticAck, consumer));
-                    log.debug("consumer registered, tag: {}, queueName: {}", consumerTag, finalQueue);
-                }
+            for (String queue : annotation.queues()) {
+                log.debug("queue to create {}", queue);
 
+                String finalQueue = setupQueue(queue, annotation);
+
+                final boolean automaticAck = Boolean.parseBoolean(mqEnvironment.get(Boolean.toString(annotation.isAck())));
+
+                Consumer consumer = build(this.rabbitTemplate.execute(channel -> channel),
+                        method,
+                        bean,
+                        method.getParameters()[0].getType(),
+                        finalQueue,
+                        automaticAck,
+                        eventMessageService,
+                        consumerDispatch
+                );
+
+                executeQueues(annotation.declareQueues());
+                executeBinding(finalQueue, annotation.declareBindings());
+                final String consumerTag = this.rabbitTemplate.execute(channel -> channel.basicConsume(finalQueue, automaticAck, consumer));
+                log.debug("consumer registered, tag: {}, queueName: {}", consumerTag, finalQueue);
             }
         }
     }
 
+    @Override
+    public Consumer build(Channel channel, Method method, Object bean, Type type, String queueName, boolean automaticAck, IMQEventMessageService eventMessageService, IMQConsumerDispatch consumerDispatch) {
+        validateChannel(channel);
+        validateMethod(method);
+        validateBean(bean);
+        validateType(type);
+        validateQueueName(queueName);
+
+        return new MQMessagingConsumer(
+                channel,
+                method,
+                bean,
+                type,
+                queueName,
+                automaticAck,
+                rabbitMQProperties,
+                eventMessageService,
+                consumerDispatch
+        );
+    }
+
+    private void validateConsumerMethod(Method method) {
+        if (method.getParameterCount() != 1 || !method.getParameterTypes()[0].equals(MQEvent.class)) {
+            throw new MQBrokerException("MQBrokerConsumer must have exactly one parameter of type MQEvent");
+        }
+    }
+
+    private String setupQueue(String queue, MQBrokerConsumer annotation) {
+
+        if (queue == null || queue.trim().isEmpty()) {
+            if (annotation.declareBindings().length < 1) {
+                throw new MQBrokerException("MQBrokerConsumer must have at least one binding");
+            }
+
+            AMQP.Queue.DeclareOk declareOk = this.rabbitTemplate.execute(channel -> {
+                log.debug("channel queueDeclare");
+                return channel.queueDeclare();
+            });
+
+            assert declareOk != null;
+            queue = declareOk.getQueue();
+            log.debug("New queue declared: {}", queue);
+        } else {
+            queue = mqEnvironment.get(queue);
+            log.debug("Using existing queue: {}", queue);
+        }
+        return queue;
+    }
+
+
     private void executeQueues(MQDeclareQueue[] brokerDeclareQueues) {
         log.debug("execute queues process");
-        for (MQDeclareQueue declare : brokerDeclareQueues)
-            this.imqQueue.declare(declare);
+        for (MQDeclareQueue q : brokerDeclareQueues) {
+            for (String queue : q.queues()) {
+                this.imqQueue.declare(queue, q);
+            }
+        }
+    }
+
+
+    public void validateType(Type type) {
+        Optional.ofNullable(type).orElseThrow(() -> new MQBrokerException(MQUtility.formatMessage(PARAM_NULL_MSG_EXCEPTION, PARAMETER_METHOD)));
+    }
+
+
+    public void validateMethod(Method method) {
+        Optional.ofNullable(method).orElseThrow(() -> new MQBrokerException(MQUtility.formatMessage(PARAM_NULL_MSG_EXCEPTION, PARAMETER_METHOD)));
+
+    }
+
+
+    public void validateQueueName(String queueName) {
+        Optional.ofNullable(queueName).orElseThrow(() -> new MQBrokerException(MQUtility.formatMessage(PARAM_NULL_MSG_EXCEPTION, PARAMETER_QUEUE_NAME)));
+
+    }
+
+
+    public void validateBean(Object bean) {
+        Optional.ofNullable(bean).orElseThrow(() -> new MQBrokerException(MQUtility.formatMessage(PARAM_NULL_MSG_EXCEPTION, PARAMETER_BEAN)));
+
+    }
+
+
+    public void validateChannel(Channel channel) {
+        Optional.ofNullable(channel).orElseThrow(() -> new MQBrokerException(MQUtility.formatMessage(PARAM_NULL_MSG_EXCEPTION, PARAMETER_CHANNEL)));
     }
 }

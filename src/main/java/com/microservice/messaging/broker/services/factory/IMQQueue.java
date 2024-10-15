@@ -20,5 +20,5 @@ import com.microservice.messaging.broker.components.annotations.MQDeclareQueue;
 public interface IMQQueue {
     void register(String queue, MQDeclareQueue annotation);
 
-    void declare(MQDeclareQueue annotation);
+    void declare(String queue, MQDeclareQueue annotation);
 }

@@ -1,4 +1,4 @@
-package com.microservice.messaging.broker.components.annotations;
+package com.microservice.messaging.broker.components.aspects;
 
 
 import com.microservice.messaging.broker.services.factory.BrokerRegistry;
@@ -36,7 +36,9 @@ public class MQBeanProcessor implements BeanPostProcessor {
     @Override
     public Object postProcessBeforeInitialization(@NonNull Object bean, @NonNull String beanName) throws BeansException {
         log.debug("Processing bean: {}, name: {}", bean, beanName);
+        brokerRegistry.registerCallback(bean, beanName);
         brokerRegistry.registerExchange(bean, beanName);
+        brokerRegistry.registerConsumer(bean, beanName);
         brokerRegistry.registerQueue(bean, beanName);
         brokerRegistry.registerBinding(bean, beanName);
         brokerRegistry.registerConfirm(bean, beanName);

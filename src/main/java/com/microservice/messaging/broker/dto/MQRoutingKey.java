@@ -2,13 +2,15 @@ package com.microservice.messaging.broker.dto;
 
 
 import com.microservice.messaging.broker.components.enums.MQEventType;
-import com.microservice.messaging.broker.constants.RabbitMQConstant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Optional;
+
+import static com.microservice.messaging.broker.constants.RabbitMQConstant.SIMPLE_DOT_FORMAT;
+import static com.microservice.messaging.broker.constants.RabbitMQConstant.SIMPLE_EMPTY_FORMAT;
 
 /**
  * MQRoutingKey
@@ -38,18 +40,23 @@ public class MQRoutingKey {
 
     @Override
     public String toString() {
+
         final StringBuilder sb = new StringBuilder();
         sb.append(eventType.name());
-        sb.append(RabbitMQConstant.SIMPLE_DOT_FORMAT);
+        sb.append(SIMPLE_DOT_FORMAT);
         sb.append(origin);
-        sb.append(RabbitMQConstant.SIMPLE_DOT_FORMAT);
+        sb.append(SIMPLE_DOT_FORMAT);
         sb.append(destiny);
-        sb.append(RabbitMQConstant.SIMPLE_DOT_FORMAT);
+        sb.append(SIMPLE_DOT_FORMAT);
         sb.append(domain);
-        sb.append(RabbitMQConstant.SIMPLE_DOT_FORMAT);
+        sb.append(SIMPLE_DOT_FORMAT);
         sb.append(command);
-        Optional.ofNullable(additional).ifPresent(s -> sb.append(RabbitMQConstant.SIMPLE_DOT_FORMAT));
-        sb.append(RabbitMQConstant.SIMPLE_DOT_FORMAT);
+
+        var route = Optional.ofNullable(additional).orElse(SIMPLE_EMPTY_FORMAT);
+        if (!route.trim().isEmpty()) {
+            sb.append(SIMPLE_DOT_FORMAT);
+            sb.append(route);
+        }
         return sb.toString();
     }
 }

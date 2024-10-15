@@ -12,9 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.Optional;
 
 import static com.microservice.messaging.broker.constants.RabbitMQConstant.PARAMETER_NUMBER_TYPES_REQUIRED_CONFIRM;
 import static com.microservice.messaging.broker.constants.RabbitMQConstant.PARAMETER_NUMBER_TYPES_REQUIRED_FIRST_INDEX;
@@ -50,42 +49,39 @@ public class MQConfirme extends MQBase implements IMQConfirme {
     @Override
     public void confirm(MQEvent<?> event) throws InvocationTargetException, IllegalAccessException {
         if (!Objects.isNull(method) && !Objects.isNull(bean)) {
-            method.invoke(event);
+            method.invoke(bean, event);
         }
     }
 
     @Override
-    public void register(Method method) {
-
-    }
-
-    @Override
-    public void register(Object bean, String name) {
-
-        final Stream<Method> methodStream = Arrays.stream(bean.getClass().getMethods());
-        methodStream.parallel().forEach(method -> {
-            final MQConfirmCallBack confirmCallBack = method.getAnnotation(MQConfirmCallBack.class);
-            if (confirmCallBack != null) {
-                log.info("Registering MQConfirme name annotation {}", confirmCallBack);
-                if (Objects.isNull(this.method) && Objects.isNull(this.bean)) {
-                    log.info("validating confirm callback service if: {}", confirmCallBack);
-                    log.info("setting confirmCallBack bean");
-                    final Class<?>[] parameterTypes = method.getParameterTypes();
-                    if (parameterTypes.length != PARAMETER_NUMBER_TYPES_REQUIRED_CONFIRM) {
-                        log.error("invalid confirm callback service 1: {}", confirmCallBack);
-                    } else {
-                        if (!MQEvent.class.equals(parameterTypes[PARAMETER_NUMBER_TYPES_REQUIRED_FIRST_INDEX])) {
-                            log.error("invalid confirm callback service 0 : {}", confirmCallBack);
-                            throw new MQBrokerException("invalid confirm callback service: " + confirmCallBack);
-                        }
-                        this.method = method;
-                        this.bean = bean;
-                    }
-                }
-            } else {
-                log.debug("validating confirm callback service else:");
+    public void register(Method method, Object bean) {
+        Optional<MQConfirmCallBack> confirmCallBackOpt = Optional.ofNullable(method.getAnnotation(MQConfirmCallBack.class));
+        if (confirmCallBackOpt.isPresent()) {
+            log.debug("Registering MQConfirme name annotation {}", confirmCallBackOpt.get());
+            if (this.method == null && this.bean == null) {
+                log.debug("Validating confirm callback service: {}", confirmCallBackOpt.get());
+                validateParameters(method);
+                this.method = method;
+                this.bean = bean;
             }
-        });
+            log.debug("register confirm method {}", this.method);
+            log.debug("register confirm bean {}", this.bean);
+        } else {
+            log.debug("No confirm callback annotation found.");
+        }
     }
 
+    private void validateParameters(final Method method) {
+        final Class<?>[] parameterTypes = method.getParameterTypes();
+
+        if (parameterTypes.length != PARAMETER_NUMBER_TYPES_REQUIRED_CONFIRM) {
+            log.error("Invalid confirm callback service: expected {} parameters, got {}", PARAMETER_NUMBER_TYPES_REQUIRED_CONFIRM, parameterTypes.length);
+            throw new MQBrokerException("Invalid confirm callback service: expected " + PARAMETER_NUMBER_TYPES_REQUIRED_CONFIRM + " parameters.");
+        }
+
+        if (!MQEvent.class.equals(parameterTypes[PARAMETER_NUMBER_TYPES_REQUIRED_FIRST_INDEX])) {
+            log.error("Invalid confirm callback service parameter type: expected MQEvent, got {}", parameterTypes[PARAMETER_NUMBER_TYPES_REQUIRED_FIRST_INDEX]);
+            throw new MQBrokerException("Invalid confirm callback service: first parameter must be MQEvent.");
+        }
+    }
 }

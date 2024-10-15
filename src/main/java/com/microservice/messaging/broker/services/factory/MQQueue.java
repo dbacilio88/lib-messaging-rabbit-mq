@@ -4,6 +4,7 @@ package com.microservice.messaging.broker.services.factory;
 import com.microservice.messaging.broker.components.annotations.MQDeclareQueue;
 import com.microservice.messaging.broker.components.base.MQBase;
 import com.microservice.messaging.broker.components.environments.MQEnvironment;
+import com.microservice.messaging.broker.components.exceptions.MQBrokerException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
@@ -40,17 +41,26 @@ public class MQQueue extends MQBase implements IMQQueue {
 
     @Override
     public void register(String queue, MQDeclareQueue annotation) {
-        var queueName = this.environment.get(queue);
-        log.info("annotation {} is present, declaring queue: {}", MQDeclareQueue.class, queueName);
-        var declareQueueOk = this.rabbitTemplate.execute(channel -> {
-            Map<String, Object> arguments = new HashMap<>();
-            return channel.queueDeclare(queueName, annotation.durability(), annotation.exclusive(), annotation.autoDelete(), arguments);
-        });
-        log.debug("declareQueueOk: {}", declareQueueOk);
+        declare(queue, annotation);
     }
 
     @Override
-    public void declare(MQDeclareQueue annotation) {
-        log.info("MQDeclareQueue {} ", annotation);
+    public void declare(String queue, MQDeclareQueue annotation) {
+        var queueName = this.environment.get(queue);
+        if (queueName == null) {
+            throw new MQBrokerException("Queue name cannot be null.");
+        }
+        log.debug("annotation {} is present, declaring queue: {}", MQDeclareQueue.class, queueName);
+        try {
+            var declareQueueOk = this.rabbitTemplate.execute(channel -> {
+                Map<String, Object> arguments = new HashMap<>();
+                // Add arguments: TODO
+                return channel.queueDeclare(queueName, annotation.durability(), annotation.exclusive(), annotation.autoDelete(), arguments);
+            });
+            log.debug("Queue declared successfully: {}", declareQueueOk);
+        } catch (Exception e) {
+            log.error("Failed to declare queue: {}", queueName, e);
+            throw new MQBrokerException("Error declaring queue", e);
+        }
     }
 }

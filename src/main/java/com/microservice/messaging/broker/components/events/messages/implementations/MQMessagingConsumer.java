@@ -1,8 +1,9 @@
-package com.microservice.messaging.broker.components.events.messages;
+package com.microservice.messaging.broker.components.events.messages.implementations;
 
 
 import com.microservice.messaging.broker.components.base.MQBase;
 import com.microservice.messaging.broker.components.events.IMQEventMessageService;
+import com.microservice.messaging.broker.components.events.messages.contracts.IMQMessagingConsumer;
 import com.microservice.messaging.broker.components.exceptions.MQBrokerException;
 import com.microservice.messaging.broker.components.properties.RabbitMQProperties;
 import com.microservice.messaging.broker.dto.MQEvent;
@@ -83,13 +84,13 @@ public class MQMessagingConsumer extends MQBase implements IMQMessagingConsumer 
     }
 
     @Override
-    public void handleCancel(String s) throws IOException {
+    public void handleCancel(String s) {
         log.debug("consumer cancel handle: {}", s);
     }
 
     @Override
     public void handleShutdownSignal(String s, ShutdownSignalException e) {
-        log.debug("handleShutdownSignal: tag={}, queueName={}", s, routingKey);
+        log.info("handleShutdownSignal: tag={}, queueName={}", s, routingKey);
         log.error("handleShutdownSignal ShutdownSignalException error: {}", e.getMessage());
         connected = false;
         int count = 0;

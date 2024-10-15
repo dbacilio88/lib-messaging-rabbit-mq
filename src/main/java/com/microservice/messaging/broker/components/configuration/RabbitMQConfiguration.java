@@ -4,7 +4,7 @@ package com.microservice.messaging.broker.components.configuration;
 import com.microservice.messaging.broker.components.base.MQBase;
 import com.microservice.messaging.broker.components.enums.MQValidation;
 import com.microservice.messaging.broker.components.events.IMQEventMessageService;
-import com.microservice.messaging.broker.components.events.messages.MQMessagingConverter;
+import com.microservice.messaging.broker.components.events.messages.implementations.MQMessagingConverter;
 import com.microservice.messaging.broker.components.exceptions.MQBrokerException;
 import com.microservice.messaging.broker.components.properties.RabbitMQProperties;
 import com.microservice.messaging.broker.components.properties.validations.IRabbitMQPropertiesValidation;
@@ -15,9 +15,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import javax.net.ssl.SSLContext;
@@ -76,7 +74,7 @@ public class RabbitMQConfiguration extends MQBase {
         connectionFactory.setVirtualHost(rabbitMQProperties.getVirtualHost());
         connectionFactory.setPublisherConfirmType(CachingConnectionFactory.ConfirmType.valueOf(rabbitMQProperties.getPublisherConfirmType()));
         if (Boolean.TRUE.equals(rabbitMQProperties.isSslEnable())) {
-            SSLContext context = null;
+            SSLContext context;
             try {
                 context = SSLContext.getInstance("TSL");
                 context.init(null, null, null);

@@ -5,6 +5,7 @@ import com.microservice.messaging.broker.components.annotations.MQDeclareExchang
 import com.microservice.messaging.broker.components.base.MQBase;
 import com.microservice.messaging.broker.components.enums.MQExchangesType;
 import com.microservice.messaging.broker.components.environments.MQEnvironment;
+import com.microservice.messaging.broker.components.exceptions.MQBrokerException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
@@ -42,19 +43,30 @@ public class MQExchange extends MQBase implements IMQExchange {
     @Override
     public void register(String exchange, MQDeclareExchange annotation) {
         String exchangeType = this.environment.get(annotation.type());
-        var exchangeName = this.environment.get(exchange);
+        String exchangeName = this.environment.get(exchange);
+
+        if (exchangeName == null || exchangeType == null) {
+            throw new MQBrokerException("Exchange name or type cannot be null.");
+        }
+
         MQExchangesType exchangesType = MQExchangesType.valueOf(exchangeType);
-        log.info("annotation {} is present, declaring exchange: {}, type: {}", MQDeclareExchange.class, exchangeName, exchangesType.getValue());
-        var declareExchangeOk = this.rabbitTemplate.execute(channel -> {
-            Map<String, Object> arguments = new HashMap<>();
-            return channel.exchangeDeclare(exchangeName,
-                    exchangesType.getValue(),
-                    annotation.durability(),
-                    annotation.autoDelete(),
-                    annotation.internal(),
-                    arguments
-            );
-        });
-        log.info("declareExchangeOk: {}", declareExchangeOk);
+        log.debug("annotation {} is present, declaring exchange: {}, type: {}", MQDeclareExchange.class, exchangeName, exchangesType.getValue());
+        try {
+            var declareExchangeOk = this.rabbitTemplate.execute(channel -> {
+                Map<String, Object> arguments = new HashMap<>();
+                return channel.exchangeDeclare(
+                        exchangeName,
+                        exchangesType.getValue(),
+                        annotation.durability(),
+                        annotation.autoDelete(),
+                        annotation.internal(),
+                        arguments
+                );
+            });
+            log.debug("Exchange declared successfully: {}", declareExchangeOk);
+        } catch (Exception e) {
+            log.error("Failed to declare exchange: {}, type: {}", exchangeName, exchangesType.getValue(), e);
+            throw new MQBrokerException("Error declaring exchange", e);
+        }
     }
 }

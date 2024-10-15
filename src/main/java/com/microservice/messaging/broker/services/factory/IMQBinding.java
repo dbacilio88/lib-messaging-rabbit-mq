@@ -2,7 +2,6 @@ package com.microservice.messaging.broker.services.factory;
 
 
 import com.microservice.messaging.broker.components.annotations.MQDeclareBinding;
-import com.microservice.messaging.broker.components.annotations.MQDeclareQueue;
 
 /**
  * IMQBinding
@@ -19,5 +18,5 @@ import com.microservice.messaging.broker.components.annotations.MQDeclareQueue;
  */
 
 public interface IMQBinding {
-    void register(String binding, MQDeclareBinding annotation);
+    void register(MQDeclareBinding annotation);
 }

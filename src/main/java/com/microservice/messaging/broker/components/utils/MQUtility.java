@@ -56,4 +56,3 @@ public class MQUtility {
         return errorMessage.toString();
     }
 }
-
