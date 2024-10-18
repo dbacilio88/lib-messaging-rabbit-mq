@@ -1,0 +1,188 @@
+// Variables Definition
+def FAILED_STEP
+def CONTEXT_GH_PR
+def STATUS_GH_PR
+def DESCRIPTION_GH_PR
+def URL_GH_PR
+
+pipeline {
+  tools {
+    maven 'maven-3.6.3'
+    gradle 'gradle-8.5'
+    jdk 'openjdk-11'
+  }
+  options {
+    timeout(time: 30, unit: 'MINUTES')
+  }
+  environment {
+    GIT_AUTHOR_NAME = 'Devops Bot'
+    GIT_COMMITTER_NAME = 'Devops Bot'
+    GH_PR_AUTHOR = '@devops'
+    GITHUB_COMMENT_AUTHOR = 'Devops Bot'
+    BUILDER_MAVEN_FILE = 'pom.xml'
+    BUILDER_GRADLE_FILE = 'build.gradle'
+    COMPILER = "maven"
+    IS_MAVEN_COMPILER = true
+  }
+
+  agent any
+  stages {
+    stage('Setting Up & Initialising Env') {
+      steps {
+        script {
+          checkout scm
+          echo "Setting Up & Initialising Env"
+
+          env.COMPILER_BASE = 'mvn'
+
+          if (!fileExists(BUILDER_MAVEN_FILE)) {
+            if (fileExists(BUILDER_GRADLE_FILE)) {
+              COMPILER = "gradle"
+              IS_MAVEN_COMPILER = false
+              env.COMPILER_BASE = "sh gradlew -g ${env.GRADLE_HOME} -i --no-build-cache"
+              echo "$BUILDER_GRADLE_FILE"
+            } else {
+              error "builder file ($BUILDER_MAVEN_FILE | $BUILDER_GRADLE_FILE) is not present or is not in the root of the project"
+            }
+          } else {
+            def projectData = readMavenPom()
+            env.VERSION = projectData.version
+            echo "$VERSION"
+            env.APP_NAME = projectData.artifactId
+            echo "$APP_NAME"
+          }
+
+          sh "$COMPILER_BASE clean"
+          env.REPOSITORY_EMAIL = sh(returnStdout: true, script: 'git --no-pager show -s --format=\'%ae\' --ignore-cr-at-eol').trim()
+          echo "$REPOSITORY_EMAIL"
+          buildNumber = sh(returnStdout: true, script: 'git rev-parse HEAD')
+          echo buildNumber
+          env.LAST_COMMIT = sh(returnStdout: true, script: 'if [ -d .github ] ; then if test -f .github/.lastCommit ; then cat .github/.lastCommit; else echo "0" > .github/.lastCommit; echo "0"; fi; else echo "0"; fi')
+          echo "$LAST_COMMIT"
+          env.BUILD_GIT_NR = sh(returnStdout: true, script: 'git rev-list --count --all --skip $LAST_COMMIT')
+          echo "$BUILD_GIT_NR"
+          env.PREFIX = ".B${env.BUILD_GIT_NR}"
+          echo "$PREFIX"
+          env.PREFIX_DISPLAY = ".B${env.BUILD_GIT_NR}"
+          echo "$PREFIX_DISPLAY"
+          env.DISPLAY = ".B${env.BUILD_GIT_NR}"
+          echo "$DISPLAY"
+
+          if (env.BRANCH_NAME.equals("master")) {
+            env.PREFIX = ""
+          } else if (env.BRANCH_NAME.equals("release")) {
+            env.PREFIX = "-alpha"
+          } else if (env.BRANCH_NAME.equals("deploy-uat")) {
+            env.PREFIX = "-beta"
+          } else if (env.BRANCH_NAME.startsWith("hostfix/")) {
+            env.PREFIX = "-alpha"
+          } else {
+            env.DISPLAY = ""
+          }
+
+          env.PREFIX_DISPLAY = env.PREFIX + env.DISPLAY
+          env.IMAGE_TAG = env.VERSION + env.PREFIX
+          env.DISPLAY_NAME = env.VERSION + env.PREFIX_DISPLAY
+          env.ENVIRONMENT = "dev"
+          if (env.BRANCH_NAME.equals("master")) {
+            env.ENVIRONMENT = "prod"
+            env.NAMESPACE = "dev-core-app"
+          } else if (env.BRANCH_NAME.startsWith("release/")) {
+            env.ENVIRONMENT = "uat"
+            env.NAMESPACE = "dev-core-app"
+          } else if (env.BRANCH_NAME.equals("pre-release")) {
+            env.ENVIRONMENT = "test"
+            env.NAMESPACE = "dev-core-app"
+          } else if (env.BRANCH_NAME.equals("develop")) {
+            env.ENVIRONMENT = "dev"
+            env.NAMESPACE = "dev-core-app"
+          } else if (env.BRANCH_NAME.equals("deploy-uat")) {
+            env.ENVIRONMENT = "uat"
+            env.NAMESPACE = "dev-core-app"
+          } else if (env.BRANCH_NAME.equals("release")) {
+            env.ENVIRONMENT = "test"
+            env.NAMESPACE = "dev-core-app"
+          }
+
+        }
+      }
+      post{
+        failure{
+            script{
+                FAILED_STEP = env.STAGE_NAME
+            }
+        }
+      }
+    }
+    stage('Unit Tests') {
+      steps {
+        script {
+          echo "Unit Tests"
+        }
+      }
+    }
+    stage('Dependencies, Code Scan & Bugs') {
+      steps {
+        script {
+          echo "Dependencies, Code Scan & Bugs"
+        }
+      }
+    }
+    stage('SonarQube Quality Gate') {
+      steps {
+        script {
+          echo "SonarQube Quality Gate"
+        }
+      }
+    }
+    stage('Build image') {
+      steps {
+        script {
+          echo "Build image"
+        }
+      }
+    }
+    stage('Push image') {
+      steps {
+        script {
+          echo "Push image"
+        }
+      }
+    }
+    stage('Deploying Dev') {
+      steps {
+        script {
+          echo "Deploying Dev"
+        }
+      }
+    }
+    stage('Deploying UAT') {
+      steps {
+        script {
+          echo "Deploying UAT"
+        }
+      }
+    }
+    stage('Deploying Prod') {
+      steps {
+        script {
+          echo "Deploying Prod"
+        }
+      }
+    }
+    stage('Release') {
+      steps {
+        script {
+          echo "Release"
+        }
+      }
+    }
+    stage('Archive Build') {
+      steps {
+        script {
+          echo "Archive Build"
+        }
+      }
+    }
+  }
+}

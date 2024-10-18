@@ -286,4 +286,4 @@ replay_pid*
 
 # End of https://www.toptal.com/developers/gitignore/api/sonar
 
-docker/volume/*
+deploy/docker/volume/*
