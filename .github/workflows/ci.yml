@@ -10,7 +10,7 @@ name: Maven CI and Release
 
 on:
   push:
-    branches: [ "master", "develop" ]
+    branches: [ "master", "develop","develop" ]
   pull_request:
     branches: [ "master","release" ]
   release:
