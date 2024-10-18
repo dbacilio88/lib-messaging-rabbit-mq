@@ -1,16 +1,17 @@
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.4</version>
+        <relativePath/>
     </parent>
 
-    <groupId>com.bacsystem</groupId>
+    <groupId>com.bacsystem.utils</groupId>
     <artifactId>lib-messaging-rabbit-mq</artifactId>
     <version>1.0.0</version>
-    <description>component messaging rabbit-mq</description>
+    <description>${project.artifactId}</description>
 
     <properties>
         <java.version>21</java.version>
@@ -139,12 +140,5 @@
             </plugin>
         </plugins>
     </build>
-    <repositories>
-        <repository>
-            <id>maven_central</id>
-            <name>Maven Central</name>
-            <url>https://repo.maven.apache.org/maven2/</url>
-        </repository>
-    </repositories>
 
 </project>
