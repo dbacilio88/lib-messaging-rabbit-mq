@@ -158,10 +158,13 @@
         </repository>
     </repositories>
 
+
     <distributionManagement>
         <repository>
             <id>github</id>
+            <name>GitHub dbacilio88 Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/dbacilio88/lib-messaging-rabbit-mq</url>
         </repository>
     </distributionManagement>
+
 </project>
