@@ -17,5 +17,5 @@ package com.bacsystem.utils.components.enums;
 
 public enum MQValidation {
     PROCESS_VALIDATION_SUCCESS,
-    PROCESS_VALIDATION_ERROR;
+    PROCESS_VALIDATION_ERROR
 }
